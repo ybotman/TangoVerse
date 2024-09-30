@@ -1,1 +1,34 @@
-[]
+{
+    "Alfredo De Angelis": {
+        "name": "Alfredo De Angelis",
+        "discography": [
+            {
+                "song_title": "A la criolla",
+                "song_style": "Tango",
+                "canta_as": "Canta",
+                "orchestra": "Orquesta Alfredo De Angelis",
+                "singer": null,
+                "year_recorded": "1961",
+                "recording_studio": "Odeon",
+                "location_recorded": "Buenos Aires",
+                "recording_number_code": "55554-B 26776"
+            }
+        ]
+    },
+    "Anibal Troilo": {
+        "name": "Anibal Troilo",
+        "discography": [
+            {
+                "song_title": "A bailar",
+                "song_style": "Tango",
+                "canta_as": "singer",
+                "orchestra": "Orquesta An\u00edbal Troilo",
+                "singer": "Francisco Fiorentino",
+                "year_recorded": "1943",
+                "recording_studio": "RCA-Victor",
+                "location_recorded": "Buenos Aires",
+                "recording_number_code": "60-0271"
+            }
+        ]
+    }
+}
