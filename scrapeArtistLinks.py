@@ -35,7 +35,7 @@ def clean_text(text):
         return None
     return unidecode(text)
 
-def scrape_artist_discography(url):
+def scrape_artist_links(url):
     logging.info(f"Starting scraping for {url}")
 
     # Create the SmartScraperGraph instance
@@ -65,6 +65,10 @@ def scrape_artist_discography(url):
             "Music : the link to the recording on the site"
             "Music : Possible the Type, year, and duration - E.G. (Tango (1941) 02'30) "
             "Music : Lyrics in spanish or engish"
+            "Other : any other links that do not fit into the above categories"
+            "--"
+            "This next point is important ...  the capturing of the all the availbile presetned links is"
+            " more important that the groupng and categorization. Use the other category when you are not sure"
         ),
         source=url,
         config=graph_config
@@ -82,48 +86,54 @@ def scrape_artist_discography(url):
         "Obras": []
     }
 
-    if 'Artist' in result:
-        cleaned_data["Artist"] = {k: clean_text(v) for k, v in result['Artist'].items()}
+    try:
+        if 'Artist' in result:
+            cleaned_data["Artist"] = {k: clean_text(v) for k, v in result['Artist'].items()}
 
-    if 'Article' in result:
-        for category, articles in result['Article'].items():
-            cleaned_data["Article"][category] = [
-                {"title": clean_text(article["title"]), "link": clean_text(article["link"])}
-                for article in articles
+        if 'Article' in result:
+            for category, articles in result['Article'].items():
+                cleaned_data["Article"][category] = [
+                    {"title": clean_text(article["title"]), "link": clean_text(article["link"])}
+                    for article in articles
+                ]
+
+        if 'Music' in result:
+            cleaned_data["Music"] = [
+                {"title": clean_text(song["title"]), "link": clean_text(song["link"])}
+                for song in result['Music'].get('list of songs', [])
             ]
 
-    if 'Music' in result:
-        cleaned_data["Music"] = [
-            {"title": clean_text(song["title"]), "link": clean_text(song["link"])}
-            for song in result['Music'].get('list of songs', [])
-        ]
+        if 'Scores' in result:
+            cleaned_data["Scores"] = [
+                {
+                    "title": clean_text(score["title"]),
+                    "type": clean_text(score["type"]),
+                    "year": score.get("year"),
+                    "link": clean_text(score["link"])
+                }
+                for score in result['Scores'].get('score links', [])
+            ]
 
-    if 'Scores' in result:
-        cleaned_data["Scores"] = [
-            {
-                "title": clean_text(score["title"]),
-                "type": clean_text(score["type"]),
-                "year": score.get("year"),
-                "link": clean_text(score["link"])
-            }
-            for score in result['Scores'].get('score links', [])
-        ]
-
-    if 'Obras' in result:
-        cleaned_data["Obras"] = [
-            {
-                "title": clean_text(obras["title"]),
-                "type": clean_text(obras["type"]),
-                "year": obras.get("year"),
-                "link": clean_text(obras["link"])
-            }
-            for obras in result['Obras'].get('list of songs', [])
-        ]
+        if 'Obras' in result:
+            cleaned_data["Obras"] = [
+                {
+                    "title": clean_text(obras["title"]),
+                    "type": clean_text(obras["type"]),
+                    "year": obras.get("year"),
+                    "link": clean_text(obras["link"])
+                }
+                for obras in result['Obras'].get('list of songs', [])
+            ]
+    except Exception as e:
+        logging.error(f"Error cleaning data for {url}: {e}")
+        print(f"Error cleaning data for {url}: {e}")
+        return None
 
     return cleaned_data
 
 def main():
     logging.info("Program started.")
+    print("Program started.")
 
     links_file = 'urls.txt'  # Input file with artist links
     processed_file = 'processedUrls.txt'  # File to keep track of processed links
@@ -135,6 +145,7 @@ def main():
             urls = [line.strip() for line in f.readlines() if line.strip()]
     except Exception as e:
         logging.error(f"Error reading {links_file}: {e}")
+        print(f"Error reading {links_file}: {e}")
         return
 
     completed_urls = set()
@@ -154,48 +165,67 @@ def main():
                 all_artists = json.load(f)
         except Exception as e:
             logging.error(f"Error reading {output_file}: {e}")
+            print(f"Error reading {output_file}: {e}")
             backup_file = f"{output_file}.bak"
             os.rename(output_file, backup_file)
             logging.warning(f"Backing up malformed JSON to {backup_file}")
+            print(f"Backing up malformed JSON to {backup_file}")
             all_artists = {}
 
     for url in urls:
         if url in completed_urls:
             logging.info(f"Skipping already processed URL: {url}")
+            print(f"Skipping already processed URL: {url}")
             continue
 
         if not url:
             logging.warning("Empty URL found, skipping.")
+            print("Empty URL found, skipping.")
             continue
 
         try:
             logging.info(f"Processing link: {url}")
-            discography = scrape_artist_discography(url)
+            print(f"Processing link: {url}")
+            foundLinks = scrape_artist_links(url)
+
+            if foundLinks is None:
+                logging.error(f"Skipping URL due to data cleaning error: {url}")
+                print(f"Skipping URL due to data cleaning error: {url}")
+                continue
 
             artist_name = clean_text(url.split("/")[-1].replace("-", " ").title())
             logging.info(f"Processing artist: {artist_name}")
+            print(f"Processing artist: {artist_name}")
 
             if artist_name not in all_artists:
-                all_artists[artist_name] = {"name": artist_name, "discography": []}
+                all_artists[artist_name] = {"name": artist_name, "discography": {"Article": {}, "Scores": [], "Music": [], "Obras": []}}
 
-            all_artists[artist_name]["discography"].append(discography)
+            all_artists[artist_name]["discography"]["Article"].update(foundLinks["Article"])
+            all_artists[artist_name]["discography"]["Scores"].extend(foundLinks["Scores"])
+            all_artists[artist_name]["discography"]["Music"].extend(foundLinks["Music"])
+            all_artists[artist_name]["discography"]["Obras"].extend(foundLinks["Obras"])
 
             with open(processed_file, 'a') as f:
                 f.write(url + '\n')
             logging.info(f"Successfully processed and recorded URL: {url}")
+            print(f"Successfully processed and recorded URL: {url}")
 
             with open(output_file, 'w') as f:
                 json.dump(all_artists, f, indent=4)
 
         except Exception as e:
             logging.error(f"Error processing {url}: {e}")
+            print(f"Error processing {url}: {e}")
 
-    logging.info("All discography entries have been written to artist_discography.json.")
+    logging.info("All foundLinks entries have been written to discoveredLinks.json.")
+    print("All foundLinks entries have been written to discoveredLinks.json.")
 
     if len(completed_urls) == len(urls):
         logging.info("Program completed successfully without errors.")
+        print("Program completed successfully without errors.")
     else:
         logging.info("Program completed with some errors.")
+        print("Program completed with some errors.")
 
 if __name__ == "__main__":
     main()

@@ -73,6 +73,14 @@
                         {
                             "title": "Griseta - \"Griseta\" and french literature",
                             "link": "https://www.todotango.com/english/history/chronicle/155/Griseta-Griseta-and-french-literature/"
+                        },
+                        {
+                            "title": "The work of Carlos Bahr as author",
+                            "link": "https://www.todotango.com/english/history/chronicle/23/The-work-of-Carlos-Bahr-as-author/"
+                        },
+                        {
+                            "title": "No, there are no larks",
+                            "link": "https://www.todotango.com/english/history/chronicle/346/No-there-are-no-larks/"
                         }
                     ],
                     "El baile": [
@@ -89,6 +97,22 @@
                         {
                             "title": "Orquesta Tipica Juan D'Arienzo",
                             "link": "https://www.todotango.com/english/history/chronicle/522/Orquesta-Tipica-Juan-DArienzo/"
+                        },
+                        {
+                            "title": "Orquesta Tipica Florindo Sassone",
+                            "link": "https://www.todotango.com/english/history/chronicle/454/Orquesta-Tipica-Florindo-Sassone/"
+                        },
+                        {
+                            "title": "Orquesta Tipica Ricardo Tanturi",
+                            "link": "https://www.todotango.com/english/history/chronicle/489/Orquesta-Tipica-Ricardo-Tanturi/"
+                        },
+                        {
+                            "title": "Sextet Miguel Orlando",
+                            "link": "https://www.todotango.com/english/history/chronicle/563/Sextet-Miguel-Orlando/"
+                        },
+                        {
+                            "title": "Tango sextets and their line-ups (1919 - 1973)",
+                            "link": "https://www.todotango.com/english/history/chronicle/414/Tango-sextets-and-their-line-ups-1919-1973/"
                         }
                     ],
                     "Tango en el mundo": [
@@ -106,6 +130,10 @@
                     {
                         "title": "A la luz del candil",
                         "link": "https://www.todotango.com/english/music/song/1198/A-la-luz-del-candil/"
+                    },
+                    {
+                        "title": "A mi no me interesa",
+                        "link": "https://www.todotango.com/english/music/song/3835/A-mi-no-me-interesa/"
                     }
                 ],
                 "Scores": [
@@ -130,7 +158,7 @@
                     {
                         "title": "Por tener un corazon",
                         "type": "Tango",
-                        "year": "1941",
+                        "year": "1951",
                         "link": "https://www.todotango.com/english/music/song/2044/Por-tener-un-corazon/"
                     }
                 ],
@@ -146,6 +174,12 @@
                         "type": "Tango",
                         "year": "1943",
                         "link": "https://www.todotango.com/english/music/song/1198/A-la-luz-del-candil/"
+                    },
+                    {
+                        "title": "A mi no me interesa",
+                        "type": "Tango",
+                        "year": "1940",
+                        "link": "https://www.todotango.com/english/music/song/3835/A-mi-no-me-interesa/"
                     }
                 ]
             }
