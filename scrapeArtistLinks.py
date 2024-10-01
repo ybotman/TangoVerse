@@ -1,0 +1,201 @@
+import os
+import logging
+import json
+from dotenv import load_dotenv
+from scrapegraphai.graphs import SmartScraperGraph
+from unidecode import unidecode
+
+# Load environment variables from .env file
+load_dotenv()
+
+API_KEY = os.getenv("SCRAPEGRAPH_API_KEY")  # Ensure this variable is set in your .env file
+
+# Configure logging
+logging.basicConfig(
+    filename='scraping.log',  # Log file
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# Configuration for ScrapeGraphAI
+graph_config = {
+    "llm": {
+        "api_key": API_KEY,
+        "model": "openai/gpt-4o-mini",
+        "temperature": 0,
+    },
+    "verbose": True,
+    "headless": True,
+}
+
+# Clean the text using unidecode to remove accents
+def clean_text(text):
+    """Clean the input text by removing accents and non-text markings."""
+    if text is None:
+        return None
+    return unidecode(text)
+
+def scrape_artist_discography(url):
+    logging.info(f"Starting scraping for {url}")
+
+    # Create the SmartScraperGraph instance
+    smart_scraper_graph = SmartScraperGraph(
+        prompt=(
+            "We have a list for a given artist Each on 1 link, the goal is to get"
+            "an inventory of all the links from the links and what grouping they are in."
+            "for Example, the https://www.todotango.com/english/artists/info/104/Rodolfo-Biagi"
+            "link has links for Article, Boiography, Las entraevistas, Discography, Obras"
+            "scores, Los Historria, Ltics and more."
+            "your goal is to parese each site find links and group them according this"
+            "list below (and add more if you see them.)"
+            "Artist : some facts name, DOB,Nicknames, Place of birth, Date of death"
+            "Article: Biographies,"
+            "Article: Las entrevistas,"
+            "Article: La Historia,"
+            "Article: Los tangos,"
+            "Article: El baile,"
+            "Article: Las orquestas,"
+            "Article: Tango en el mundo,"
+            "Article: Buenos Aires,"
+            "Scores: score links name (with the Title of the soong, type and year)"
+            "Scores: Link to the song"
+            "Obras : list of songs titles, tpye (tango, vals, milonga, etc) and year recorded"
+            "Obras : Link to the song"
+            "Music : List of songs titles (that have a recording on the site)"
+            "Music : the link to the recording on the site"
+            "Music : Possible the Type, year, and duration - E.G. (Tango (1941) 02'30) "
+            "Music : Lyrics in spanish or engish"
+        ),
+        source=url,
+        config=graph_config
+    )
+
+    # Run the scraper and capture the result
+    result = smart_scraper_graph.run()
+
+    # Clean and organize the data
+    cleaned_data = {
+        "Artist": {},
+        "Article": {},
+        "Music": [],
+        "Scores": [],
+        "Obras": []
+    }
+
+    if 'Artist' in result:
+        cleaned_data["Artist"] = {k: clean_text(v) for k, v in result['Artist'].items()}
+
+    if 'Article' in result:
+        for category, articles in result['Article'].items():
+            cleaned_data["Article"][category] = [
+                {"title": clean_text(article["title"]), "link": clean_text(article["link"])}
+                for article in articles
+            ]
+
+    if 'Music' in result:
+        cleaned_data["Music"] = [
+            {"title": clean_text(song["title"]), "link": clean_text(song["link"])}
+            for song in result['Music'].get('list of songs', [])
+        ]
+
+    if 'Scores' in result:
+        cleaned_data["Scores"] = [
+            {
+                "title": clean_text(score["title"]),
+                "type": clean_text(score["type"]),
+                "year": score.get("year"),
+                "link": clean_text(score["link"])
+            }
+            for score in result['Scores'].get('score links', [])
+        ]
+
+    if 'Obras' in result:
+        cleaned_data["Obras"] = [
+            {
+                "title": clean_text(obras["title"]),
+                "type": clean_text(obras["type"]),
+                "year": obras.get("year"),
+                "link": clean_text(obras["link"])
+            }
+            for obras in result['Obras'].get('list of songs', [])
+        ]
+
+    return cleaned_data
+
+def main():
+    logging.info("Program started.")
+
+    links_file = 'urls.txt'  # Input file with artist links
+    processed_file = 'processedUrls.txt'  # File to keep track of processed links
+    output_file = 'discoveredLinks.json'  # Output JSON file
+
+    # Read URLs from the links file
+    try:
+        with open(links_file, 'r') as f:
+            urls = [line.strip() for line in f.readlines() if line.strip()]
+    except Exception as e:
+        logging.error(f"Error reading {links_file}: {e}")
+        return
+
+    completed_urls = set()
+
+    # Load processed URLs from the processed file
+    if os.path.exists(processed_file):
+        with open(processed_file, 'r') as f:
+            completed_urls = set(line.strip() for line in f.readlines())
+
+    # Initialize all_artists dictionary
+    all_artists = {}
+
+    # Load existing discographies from JSON file, if it exists
+    if os.path.exists(output_file):
+        try:
+            with open(output_file, 'r') as f:
+                all_artists = json.load(f)
+        except Exception as e:
+            logging.error(f"Error reading {output_file}: {e}")
+            backup_file = f"{output_file}.bak"
+            os.rename(output_file, backup_file)
+            logging.warning(f"Backing up malformed JSON to {backup_file}")
+            all_artists = {}
+
+    for url in urls:
+        if url in completed_urls:
+            logging.info(f"Skipping already processed URL: {url}")
+            continue
+
+        if not url:
+            logging.warning("Empty URL found, skipping.")
+            continue
+
+        try:
+            logging.info(f"Processing link: {url}")
+            discography = scrape_artist_discography(url)
+
+            artist_name = clean_text(url.split("/")[-1].replace("-", " ").title())
+            logging.info(f"Processing artist: {artist_name}")
+
+            if artist_name not in all_artists:
+                all_artists[artist_name] = {"name": artist_name, "discography": []}
+
+            all_artists[artist_name]["discography"].append(discography)
+
+            with open(processed_file, 'a') as f:
+                f.write(url + '\n')
+            logging.info(f"Successfully processed and recorded URL: {url}")
+
+            with open(output_file, 'w') as f:
+                json.dump(all_artists, f, indent=4)
+
+        except Exception as e:
+            logging.error(f"Error processing {url}: {e}")
+
+    logging.info("All discography entries have been written to artist_discography.json.")
+
+    if len(completed_urls) == len(urls):
+        logging.info("Program completed successfully without errors.")
+    else:
+        logging.info("Program completed with some errors.")
+
+if __name__ == "__main__":
+    main()
