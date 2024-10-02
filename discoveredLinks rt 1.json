@@ -1,0 +1,76 @@
+{
+    "Unknown Artist": {
+        "Artist": {
+            "name": "Unknown Artist"
+        },
+        "Article": {
+            "Biographies": [],
+            "Las entrevistas": [
+                {
+                    "title": "C\u00f3spito - A meeting with Ren\u00e9 C\u00f3spito",
+                    "link": "https://www.todotango.com/english/history/chronicle/332/Cospito-A-meeting-with-Rene-Cospito/"
+                }
+            ],
+            "": [
+                {
+                    "title": "Tango sextets and their line-ups (1919 - 1973)",
+                    "link": "https://www.todotango.com/english/history/chronicle/414/Tango-sextets-and-their-line-ups-1919-1973/"
+                }
+            ],
+            "La Historia": [
+                {
+                    "title": "The tango singer: His evolution along time - The orchestra singer",
+                    "link": "https://www.todotango.com/english/history/chronicle/70/The-tango-singer:-His-evolution-along-time-The-orchestra-singer/"
+                }
+            ],
+            "Los tangos": [
+                {
+                    "title": "Boedo - Story of the tango \"Boedo\u201d",
+                    "link": "https://www.todotango.com/english/history/chronicle/337/Boedo-Story-of-the-tango-Boedo/"
+                }
+            ],
+            "El baile": [
+                {
+                    "title": "A crowded tango ball at the La Rural (1932)",
+                    "link": "https://www.todotango.com/english/history/chronicle/439/A-crowded-tango-ball-at-the-La-Rural-1932/"
+                }
+            ],
+            "Los personajes": [
+                {
+                    "title": "Astor Piazzolla - Octeto de Buenos Aires. The post-French revolution.",
+                    "link": "https://www.todotango.com/english/history/chronicle/125/Astor-Piazzolla-Octeto-de-Buenos-Aires-The-post-French-revolution/"
+                }
+            ],
+            "Las orquestas": [
+                {
+                    "title": "Orquesta T\u00edpica Julio De Caro",
+                    "link": "https://www.todotango.com/english/history/chronicle/427/Orquesta-Tipica-Julio-De-Caro/"
+                }
+            ],
+            "Tango en el mundo": [
+                {
+                    "title": "Italian tango artists",
+                    "link": "https://www.todotango.com/english/history/chronicle/402/Italian-tango-artists/"
+                }
+            ],
+            "Buenos Aires": [
+                {
+                    "title": "Hombre de la esquina rosada (Man from the Pink Corner) - Borges and tango",
+                    "link": "https://www.todotango.com/english/history/chronicle/3/Hombre-de-la-esquina-rosada-Man-from-the-Pink-Corner-Borges-and-tango/"
+                }
+            ]
+        },
+        "Music": [],
+        "Scores": [
+            {
+                "title": "A pan y agua",
+                "type": "Tango",
+                "year": "",
+                "link": "https://www.todotango.com/english/music/song/324/A-pan-y-agua/"
+            }
+        ],
+        "Obras": [],
+        "Discography": [],
+        "Other": []
+    }
+}

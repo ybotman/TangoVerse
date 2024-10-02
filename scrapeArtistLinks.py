@@ -83,53 +83,82 @@ def scrape_artist_links(url):
         "Article": {},
         "Music": [],
         "Scores": [],
-        "Obras": []
+        "Obras": [],
+        "Discography": [],
+        "Other": []
     }
 
+    errors = []
+
     try:
-        if 'Artist' in result:
+        if 'Artist' in result and isinstance(result['Artist'], dict):
             cleaned_data["Artist"] = {k: clean_text(v) for k, v in result['Artist'].items()}
 
-        if 'Article' in result:
+        if 'Article' in result and isinstance(result['Article'], dict):
             for category, articles in result['Article'].items():
-                cleaned_data["Article"][category] = [
-                    {"title": clean_text(article["title"]), "link": clean_text(article["link"])}
-                    for article in articles
+                if isinstance(articles, list):
+                    cleaned_data["Article"][category] = [
+                        {"title": clean_text(article["title"]), "link": clean_text(article["link"])}
+                        for article in articles if isinstance(article, dict) and "title" in article and "link" in article
+                    ]
+
+        if 'Music' in result and isinstance(result['Music'], dict):
+            if 'list of songs' in result['Music'] and isinstance(result['Music']['list of songs'], list):
+                cleaned_data["Music"] = [
+                    {"title": clean_text(song["title"]), "link": clean_text(song["link"])}
+                    for song in result['Music']['list of songs'] if isinstance(song, dict) and "title" in song and "link" in song
                 ]
 
-        if 'Music' in result:
-            cleaned_data["Music"] = [
-                {"title": clean_text(song["title"]), "link": clean_text(song["link"])}
-                for song in result['Music'].get('list of songs', [])
+        if 'Scores' in result and isinstance(result['Scores'], dict):
+            if 'score links' in result['Scores'] and isinstance(result['Scores']['score links'], list):
+                cleaned_data["Scores"] = [
+                    {
+                        "title": clean_text(score["title"]),
+                        "type": clean_text(score["type"]),
+                        "year": score.get("year"),
+                        "link": clean_text(score["link"])
+                    }
+                    for score in result['Scores']['score links'] if isinstance(score, dict) and "title" in score and "link" in score
+                ]
+
+        if 'Obras' in result and isinstance(result['Obras'], dict):
+            if 'list of songs' in result['Obras'] and isinstance(result['Obras']['list of songs'], list):
+                cleaned_data["Obras"] = [
+                    {
+                        "title": clean_text(obras["title"]),
+                        "type": clean_text(obras["type"]),
+                        "year": obras.get("year"),
+                        "link": clean_text(obras["link"])
+                    }
+                    for obras in result['Obras']['list of songs'] if isinstance(obras, dict) and "title" in obras and "link" in obras
+                ]
+
+        if 'Discography' in result and isinstance(result['Discography'], list):
+            cleaned_data["Discography"] = [
+                {"title": clean_text(disc["title"]), "link": clean_text(disc["link"])}
+                for disc in result['Discography'] if isinstance(disc, dict) and "title" in disc and "link" in disc
             ]
 
-        if 'Scores' in result:
-            cleaned_data["Scores"] = [
-                {
-                    "title": clean_text(score["title"]),
-                    "type": clean_text(score["type"]),
-                    "year": score.get("year"),
-                    "link": clean_text(score["link"])
-                }
-                for score in result['Scores'].get('score links', [])
+        if 'Other' in result and isinstance(result['Other'], list):
+            cleaned_data["Other"] = [
+                {"title": clean_text(other["title"]), "link": clean_text(other["link"])}
+                for other in result['Other'] if isinstance(other, dict) and "title" in other and "link" in other
             ]
 
-        if 'Obras' in result:
-            cleaned_data["Obras"] = [
-                {
-                    "title": clean_text(obras["title"]),
-                    "type": clean_text(obras["type"]),
-                    "year": obras.get("year"),
-                    "link": clean_text(obras["link"])
-                }
-                for obras in result['Obras'].get('list of songs', [])
-            ]
     except Exception as e:
-        logging.error(f"Error cleaning data for {url}: {e}")
-        print(f"Error cleaning data for {url}: {e}")
+        error_message = f"Error cleaning data for {url}: {e}"
+        logging.error(error_message)
+        errors.append(error_message)
+        with open("failedURL.txt", "a") as f:
+            f.write(f"{url}\n")
         return None
 
+    if errors:
+        for error in errors:
+            print(error)
+
     return cleaned_data
+
 
 def main():
     logging.info("Program started.")
@@ -191,6 +220,8 @@ def main():
             if foundLinks is None:
                 logging.error(f"Skipping URL due to data cleaning error: {url}")
                 print(f"Skipping URL due to data cleaning error: {url}")
+                with open("failedURL.txt", "a") as f:
+                    f.write(f"{url}\n")
                 continue
 
             artist_name = clean_text(url.split("/")[-1].replace("-", " ").title())
@@ -216,6 +247,8 @@ def main():
         except Exception as e:
             logging.error(f"Error processing {url}: {e}")
             print(f"Error processing {url}: {e}")
+            with open("failedURL.txt", "a") as f:
+                f.write(f"{url}\n")
 
     logging.info("All foundLinks entries have been written to discoveredLinks.json.")
     print("All foundLinks entries have been written to discoveredLinks.json.")
